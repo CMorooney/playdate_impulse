@@ -1,0 +1,14 @@
+.DS_Store
+*.o
+*.lst
+Extension/.dep/*.o.d
+*.pdx
+*.dylib.dSYM
+*.dylib
+*.bin
+*.elf
+*.hex
+*.map
+build/
+.cache/
+compile_commands.json
