@@ -78,7 +78,7 @@ void init_sprites(void) {
   pd->sprite->addSprite(ball30_sprite);
   RigidBody* ball30_body = &(RigidBody) {
     .pos = ball30_pos,
-    .velocity = (Vector) { -1, -1 },
+    .velocity = (Vector) { -0, -0 },
     .inv_mass = .5f,
     .restitution = .2f,
     .density = .2f,
@@ -96,7 +96,7 @@ void init_sprites(void) {
   pd->sprite->addSprite(ball50_sprite);
   RigidBody* ball50_body = &(RigidBody) {
     .pos = ball50_pos,
-    .velocity = (Vector) { 1, 1 },
+    .velocity = (Vector) { 0, 0 },
     .inv_mass = .2f,
     .restitution = .4f,
     .density = .3f,
@@ -121,7 +121,7 @@ void init_sprites(void) {
 
 void update_delta_time(void) {
   int current_time = pd->system->getCurrentTimeMilliseconds();
-  delta_time = (current_time - last_time);
+  delta_time = (current_time - last_time)/1000.0f;
   last_time = current_time;
 }
 
@@ -132,12 +132,14 @@ LCDSprite* create_ball(void) {
 }
 
 void tick(void) {
+  Vector g = (Vector){ .x=0, .y=20 };
   for(int i = 0; i < 2; i++) {
     RigidBody* body = &bodies[i];
     if(body == NULL || body->sprite == NULL) {
       pd->system->logToConsole("sprite null");
     }
-    Vector vv = add_vectors(body->pos, body->velocity);
+    Vector vv = add_vectors(body->pos, multiply_vector(body->velocity, delta_time));
+    body->velocity = add_vectors(body->velocity, multiply_vector(g, delta_time));
     float a, b;
     int l;
     pd->sprite->moveWithCollisions(body->sprite, vv.x, vv.y, &a, &b, &l);
