@@ -103,63 +103,35 @@ bool AABBvsAABB(RigidBody* a, RigidBody* b, Collision* c) {
   return false;
 }
 
+// https://learnopengl.com/In-Practice/2D-Game/Collisions/Collision-detection
 bool AABB_vs_circle(RigidBody* aabb, RigidBody* circle, Collision* c) {
-  Vector n = subtract_vectors(circle->pos, aabb->pos);
+  // get vector from center of circle to center of aabb
+  Vector distance_between_bodies = subtract_vectors(circle->pos, aabb->pos);
 
-  Vector closest = n;
+  // get the half-size dimensions of the aabb
+  float aabb_half_x_extent = (aabb->collider_shape.aabb.max.x - aabb->collider_shape.aabb.min.x) / 2;
+  float aabb_half_y_extent = (aabb->collider_shape.aabb.max.y - aabb->collider_shape.aabb.min.y) / 2;
 
-  float x_extent = (aabb->collider_shape.aabb.max.x - aabb->collider_shape.aabb.min.x) / 2;
-  float y_extent = (aabb->collider_shape.aabb.max.y - aabb->collider_shape.aabb.min.y) / 2;
+  // clamp vector between body centers to the bounds of the aabb
+  Vector clamped = distance_between_bodies;
+  clamped.x = clamp(clamped.x, aabb_half_x_extent, -aabb_half_x_extent);
+  clamped.y = clamp(clamped.y, aabb_half_y_extent, -aabb_half_y_extent);
 
-  closest.x = clamp(-x_extent, x_extent, closest.x);
-  closest.y = clamp(-y_extent, y_extent, closest.y);
+  Vector closest_point_on_aabb = add_vectors(clamped, aabb->pos);
+  Vector circle_pos_to_aabb_point = subtract_vectors(circle->pos, closest_point_on_aabb);
+  float circle_pos_to_aabb_point_distance_squared = get_magnitude_squared(circle_pos_to_aabb_point);
+  float circle_radius = circle->collider_shape.circle.radius;
 
-  bool inside = false;
-
-  // the circle is inside the aabb so we need to clamp the circle's center to the closest edge
-  if(equals(n, closest)) {
-    inside = true;
-
-    // find closest axis
-    if(fabsf(n.x) > fabsf(n.y))
-    {
-      // clamp to closest extent
-      if(closest.x > 0) {
-        closest.x = x_extent;
-      } else {
-        closest.x = -x_extent;
-      }
-    } else {
-      if(closest.y > 0) {
-        closest.y = y_extent;
-      } else {
-        closest.y = -y_extent;
-      }
-    }
-  }
-
-  Vector normal = subtract_vectors(n, closest);
-  float d = get_magnitude_squared(normal);
-  float r = circle->collider_shape.circle.radius;
-
-  if(d > powf(r, 2) && !inside) {
+  bool collided = circle_pos_to_aabb_point_distance_squared > (circle_radius*circle_radius);
+  if(!collided)
+  {
     return false;
   }
 
-  d = sqrtf(d);
-
-  if(inside) {
-    c->normal = negate_vector(n);
-  } else {
-    c->normal = n;
-  }
-
-  c->penetration = r-d;
+  float m = sqrtf(circle_pos_to_aabb_point_distance_squared);
+  c->penetration = circle_radius - m;
+  c->normal = negate_vector(divide_vector(circle_pos_to_aabb_point, m));
   return true;
-}
-
-float distance(Vector a, Vector b) {
-  return sqrtf(powf(a.x - b.x, 2) + powf(a.y - b.y, 2));
 }
 
 bool circle_vs_circle_optimized(RigidBody* a, RigidBody* b, Collision* c) {
@@ -212,5 +184,5 @@ void collide(RigidBody* a, RigidBody* b, Vector normal) {
   // apply impulse
   Vector impulse = multiply_vector(normal, j);
   a->velocity = subtract_vectors(a->velocity, multiply_vector(impulse, a->inv_mass));
-  b->velocity = add_vectors(b->velocity, multiply_vector(impulse, a->inv_mass));
+  b->velocity = add_vectors(b->velocity, multiply_vector(impulse, b->inv_mass));
 }

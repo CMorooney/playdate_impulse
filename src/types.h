@@ -20,6 +20,11 @@ union ColliderShape {
   AABB aabb;
 };
 
+typedef enum {
+  circle,
+  aabb
+} ColliderShapeType;
+
 typedef struct {
   Vector pos;
   Vector velocity;
@@ -28,6 +33,7 @@ typedef struct {
   float density;
   float force;
   union ColliderShape collider_shape;
+  ColliderShapeType collider_shape_type;
   LCDSprite* sprite;
 } RigidBody;
 
