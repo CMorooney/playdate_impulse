@@ -94,6 +94,7 @@ void init_sprites(void) {
   pd->sprite->setCollideRect(ball30_sprite, (PDRect){ .x=-10, .y=-10, .width=50, .height=50 });
   pd->sprite->setCollisionResponseFunction(ball30_sprite, ball_collider_handler);
   pd->sprite->moveTo(ball30_sprite, ball30_pos.x, ball30_pos.y);
+  pd->sprite->setTag(ball30_sprite, (uint8_t)circle);
   pd->sprite->addSprite(ball30_sprite);
   RigidBody* ball30_body = &(RigidBody) {
     .pos = ball30_pos,
@@ -101,6 +102,7 @@ void init_sprites(void) {
     .inv_mass = .5f,
     .restitution = .2f,
     .density = .2f,
+    .g_mult = 1,
     .collider_shape = (union ColliderShape){ .circle = (Circle){ .radius = 15.0f } },
     .collider_shape_type = circle,
     .sprite = ball30_sprite
@@ -114,6 +116,7 @@ void init_sprites(void) {
   pd->sprite->setCollideRect(ball50_sprite, (PDRect){ .x=-10, .y=-10, .width=70, .height=70 });
   pd->sprite->setCollisionResponseFunction(ball50_sprite, ball_collider_handler);
   pd->sprite->moveTo(ball50_sprite, ball50_pos.x, ball50_pos.y);
+  pd->sprite->setTag(ball50_sprite, (uint8_t)circle);
   pd->sprite->addSprite(ball50_sprite);
   RigidBody* ball50_body = &(RigidBody) {
     .pos = ball50_pos,
@@ -121,6 +124,7 @@ void init_sprites(void) {
     .inv_mass = .2f,
     .restitution = .4f,
     .density = .3f,
+    .g_mult = 1,
     .collider_shape = (union ColliderShape){ .circle = (Circle){ .radius = 25.0f } },
     .collider_shape_type = circle,
     .sprite = ball50_sprite
@@ -142,7 +146,8 @@ void init_sprites(void) {
     .inv_mass = 0,
     .restitution = 0.4f,
     .density = 0.3f,
-    .collider_shape = (union ColliderShape) { .aabb = (AABB){ .min = (Vector){.x=0, .y=LCD_ROWS-24}, .max = (Vector){.x=LCD_COLUMNS, .y=LCD_ROWS} } },
+    .g_mult = 0,
+    .collider_shape = (union ColliderShape) { .aabb = (AABB){ .width=LCD_COLUMNS, .height = 25 } },
     .collider_shape_type = aabb,
     .sprite = floor_sprite
   };
@@ -169,27 +174,12 @@ void update_delta_time(void) {
   last_time = current_time;
 }
 
-// do I need this?
-bool on_ground(RigidBody* body) {
-  float bottom = 400;
-  float pos_y = body->pos.y;
-  ColliderShapeType t = body->collider_shape_type;
-  if(t == circle){
-    return pos_y + body->collider_shape.circle.radius > bottom;
-  } else if (t == aabb) {
-    AABB aabb = body->collider_shape.aabb;
-    float h = aabb.max.y - aabb.min.y;
-    return pos_y + (h/2) > bottom;
-  }
-  return false;
-}
-
 void tick(void) {
   Vector g = (Vector){ .x=0, .y=25 };
   for(int i = 0; i < 2; i++) {
     RigidBody* body = &bodies[i];
     Vector vv = add_vectors(body->pos, multiply_vector(body->velocity, delta_time));
-    body->velocity = add_vectors(body->velocity, multiply_vector(g, delta_time));
+    body->velocity = add_vectors(body->velocity, multiply_vector(multiply_vector(g, body->g_mult), delta_time));
     float a, b;
     int l;
     pd->sprite->moveWithCollisions(body->sprite, vv.x, vv.y, &a, &b, &l);

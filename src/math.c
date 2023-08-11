@@ -62,20 +62,20 @@ float dot_product(Vector v1, Vector v2) {
   return sum;
 }
 
-bool AABBvsAABB(RigidBody* a, RigidBody* b, Collision* c) {
+bool AABB_vs_AABB(RigidBody* a, RigidBody* b, Collision* c) {
   Vector n = subtract_vectors(b->pos, a->pos);
   AABB abox = a->collider_shape.aabb;
   AABB bbox = b->collider_shape.aabb;
 
-  float a_extent_x = (abox.max.x - abox.min.x) / 2;
-  float b_extent_x = (bbox.max.x - bbox.min.x) / 2;
+  float a_extent_x = abox.width / 2;
+  float b_extent_x = bbox.width / 2;
 
   float x_overlap = a_extent_x + b_extent_x - fabsf(n.x);
 
   // SET test on x axis
   if(x_overlap > 0) {
-    float a_extent_y = (abox.max.y - abox.min.y) / 2;
-    float b_extent_y = (bbox.max.y - bbox.min.y) / 2;
+    float a_extent_y = abox.height / 2;
+    float b_extent_y = abox.height / 2;
 
     float y_overlap = a_extent_y + b_extent_y - fabsf(n.y);
 
@@ -109,8 +109,8 @@ bool AABB_vs_circle(RigidBody* aabb, RigidBody* circle, Collision* c) {
   Vector distance_between_bodies = subtract_vectors(circle->pos, aabb->pos);
 
   // get the half-size dimensions of the aabb
-  float aabb_half_x_extent = (aabb->collider_shape.aabb.max.x - aabb->collider_shape.aabb.min.x) / 2;
-  float aabb_half_y_extent = (aabb->collider_shape.aabb.max.y - aabb->collider_shape.aabb.min.y) / 2;
+  float aabb_half_x_extent = aabb->collider_shape.aabb.width / 2;
+  float aabb_half_y_extent = aabb->collider_shape.aabb.height / 2;
 
   // clamp vector between body centers to the bounds of the aabb
   Vector clamped = distance_between_bodies;

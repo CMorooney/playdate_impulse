@@ -8,7 +8,7 @@ typedef struct {
 } Vector;
 
 typedef struct {
-  Vector min, max;
+  float width, height;
 } AABB;
 
 typedef struct {
@@ -31,6 +31,7 @@ typedef struct {
   float inv_mass;
   float restitution;
   float density;
+  float g_mult;
   float force;
   union ColliderShape collider_shape;
   ColliderShapeType collider_shape_type;
