@@ -72,6 +72,33 @@ SpriteCollisionResponseType ball_collider_handler(LCDSprite* sprite, LCDSprite* 
   return kCollisionTypeOverlap;
 }
 
+SpriteCollisionResponseType rect_collider_handler(LCDSprite* sprite, LCDSprite* other) {
+  ColliderShapeType collider_type = pd->sprite->getTag(other);
+  RigidBody* body = pd->sprite->getUserdata(sprite);
+  RigidBody* other_body = pd->sprite->getUserdata(other);
+
+  Collision* c = pd->system->realloc(NULL, sizeof(Collision));
+
+  bool collided = false;
+  switch(collider_type)
+  {
+    case circle:
+      collided = AABB_vs_circle(body, other_body, c);
+      break;
+    case aabb:
+      collided = AABB_vs_AABB(other_body, body, c);
+      pd->system->logToConsole("%s", collided ? "y" : "n");
+      break;
+  }
+
+  if(collided && c != NULL) {
+    collide(body, other_body, c->normal);
+  }
+  // free the collision object
+  pd->system->realloc(c, 0);
+  return kCollisionTypeOverlap;
+
+}
 
 SpriteCollisionResponseType transparent_collider_handler(LCDSprite* sprite, LCDSprite* other) {
   return kCollisionTypeOverlap;
@@ -87,7 +114,7 @@ void init_bitmaps(void) {
 }
 
 void init_sprites(void) {
-  bodies = pd->system->realloc(NULL, sizeof(RigidBody)*3);
+  bodies = pd->system->realloc(NULL, sizeof(RigidBody)*4);
   Vector ball30_pos = (Vector){ .x = SCREEN_MID_X+80, .y = 50 };
   ball30_sprite = pd->sprite->newSprite();
   pd->sprite->setImage(ball30_sprite, ball30_bmp, kBitmapUnflipped);
@@ -153,14 +180,30 @@ void init_sprites(void) {
   };
   bodies[2] = *floor_body;
   pd->sprite->setUserdata(floor_sprite, &bodies[2]);
+
+  Vector rect100_pos = (Vector){ 150, 70 };
+  rect50x100_sprite = pd->sprite->newSprite();
+  pd->sprite->setImage(rect50x100_sprite, rect50x100_bmp, kBitmapUnflipped);
+  pd->sprite->setCollideRect(rect50x100_sprite, (PDRect){ .x=-10, .y=-10, .width=70, .height=120 });
+  pd->sprite->setCollisionResponseFunction(rect50x100_sprite, rect_collider_handler);
+  pd->sprite->moveTo(rect50x100_sprite, rect100_pos.x, rect100_pos.y);
+  pd->sprite->setTag(rect50x100_sprite, (uint8_t)aabb);
+  pd->sprite->addSprite(rect50x100_sprite);
+  RigidBody* rect100_body = &(RigidBody) {
+    .pos = rect100_pos,
+    .velocity = (Vector){ .x=0, .y=0 },
+    .inv_mass = .4f,
+    .restitution = 0.4f,
+    .density = 0.3f,
+    .g_mult = 1,
+    .collider_shape = (union ColliderShape) { .aabb = (AABB){ .width=50, .height=100 } },
+    .collider_shape_type = aabb,
+    .sprite = rect50x100_sprite
+  };
+  bodies[3] = *rect100_body;
+  pd->sprite->setUserdata(rect50x100_sprite, &bodies[3]);
+
   return;
-
-  /* rect50x100_sprite = pd->sprite->newSprite(); */
-  /* pd->sprite->setImage(rect50x100_sprite, rect50x100_bmp, kBitmapUnflipped); */
-  /* pd->sprite->setCollideRect(rect50x100_sprite, (PDRect){ .x=0, .y=0, .width=50, .height=100 }); */
-  /* pd->sprite->moveTo(rect50x100_sprite, SCREEN_MID_X+30, 80); */
-  /* pd->sprite->addSprite(rect50x100_sprite); */
-
   /* rect50x25_sprite = pd->sprite->newSprite(); */
   /* pd->sprite->setImage(rect50x25_sprite, rect50x25_bmp, kBitmapUnflipped); */
   /* pd->sprite->setCollideRect(rect50x25_sprite, (PDRect){ .x=0, .y=0, .width=50, .height=25 }); */
@@ -176,7 +219,7 @@ void update_delta_time(void) {
 
 void tick(void) {
   Vector g = (Vector){ .x=0, .y=25 };
-  for(int i = 0; i < 2; i++) {
+  for(int i = 0; i < 4; i++) {
     RigidBody* body = &bodies[i];
     Vector vv = add_vectors(body->pos, multiply_vector(body->velocity, delta_time));
     body->velocity = add_vectors(body->velocity, multiply_vector(multiply_vector(g, body->g_mult), delta_time));
