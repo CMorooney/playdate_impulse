@@ -69,36 +69,33 @@ bool AABB_vs_AABB(RigidBody* a, RigidBody* b, Collision* c) {
 
   float a_extent_x = abox.width / 2;
   float b_extent_x = bbox.width / 2;
-
   float x_overlap = a_extent_x + b_extent_x - fabsf(n.x);
 
-  // SET test on x axis
-  if(x_overlap > 0) {
-    float a_extent_y = abox.height / 2;
-    float b_extent_y = abox.height / 2;
+  float a_extent_y = abox.height / 2;
+  float b_extent_y = abox.height / 2;
+  float y_overlap = a_extent_y + b_extent_y - fabsf(n.y);
 
-    float y_overlap = a_extent_y + b_extent_y - fabsf(n.y);
+  if(y_overlap <=0 && x_overlap <=0) {
+    return false;
+  }
 
-    if(y_overlap > 0) {
-      if(x_overlap > y_overlap) {
-        if(n.x > 0) {
-          c->normal = (Vector){ .x=-1, .y=0 };
-        } else {
-          c->normal = (Vector){ .x=0, .y=0 };
-        }
-
-        c->penetration = x_overlap;
-        return true;
-      } else {
-        if(n.y > 0) {
-          c->normal = (Vector){ .x=0, .y=-1 };
-        } else {
-          c->normal = (Vector){ .x=0, .y=1 };
-        }
-        c->penetration = y_overlap;
-        return true;
-      }
+  if(x_overlap < y_overlap) {
+    if(n.x < 0) {
+      c->normal = (Vector){ .x=-1, .y=0 };
+    } else {
+      c->normal = (Vector){ .x=0, .y=0 };
     }
+
+    c->penetration = x_overlap;
+    return true;
+  } else {
+    if(n.y < 0) {
+      c->normal = (Vector){ .x=0, .y=-1 };
+    } else {
+      c->normal = (Vector){ .x=0, .y=1 };
+    }
+    c->penetration = y_overlap;
+    return true;
   }
   return false;
 }

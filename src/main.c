@@ -86,8 +86,7 @@ SpriteCollisionResponseType rect_collider_handler(LCDSprite* sprite, LCDSprite* 
       collided = AABB_vs_circle(body, other_body, c);
       break;
     case aabb:
-      collided = AABB_vs_AABB(other_body, body, c);
-      pd->system->logToConsole("%s", collided ? "y" : "n");
+      collided = AABB_vs_AABB(body, other_body, c);
       break;
   }
 
@@ -118,7 +117,7 @@ void init_sprites(void) {
   Vector ball30_pos = (Vector){ .x = SCREEN_MID_X+80, .y = 50 };
   ball30_sprite = pd->sprite->newSprite();
   pd->sprite->setImage(ball30_sprite, ball30_bmp, kBitmapUnflipped);
-  pd->sprite->setCollideRect(ball30_sprite, (PDRect){ .x=-10, .y=-10, .width=50, .height=50 });
+  pd->sprite->setCollideRect(ball30_sprite, (PDRect){ .x=-2, .y=-2, .width=34, .height=34 });
   pd->sprite->setCollisionResponseFunction(ball30_sprite, ball_collider_handler);
   pd->sprite->moveTo(ball30_sprite, ball30_pos.x, ball30_pos.y);
   pd->sprite->setTag(ball30_sprite, (uint8_t)circle);
@@ -140,7 +139,7 @@ void init_sprites(void) {
   Vector ball50_pos = (Vector){ .x=SCREEN_MID_X+65, .y=120 };
   ball50_sprite = pd->sprite->newSprite();
   pd->sprite->setImage(ball50_sprite, ball50_bmp, kBitmapUnflipped);
-  pd->sprite->setCollideRect(ball50_sprite, (PDRect){ .x=-10, .y=-10, .width=70, .height=70 });
+  pd->sprite->setCollideRect(ball50_sprite, (PDRect){ .x=-2, .y=-2, .width=54, .height=54 });
   pd->sprite->setCollisionResponseFunction(ball50_sprite, ball_collider_handler);
   pd->sprite->moveTo(ball50_sprite, ball50_pos.x, ball50_pos.y);
   pd->sprite->setTag(ball50_sprite, (uint8_t)circle);
