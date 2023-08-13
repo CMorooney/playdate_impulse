@@ -1,4 +1,5 @@
 #include "math.h"
+#include "pd_api.h"
 #include <math.h>
 
 float clamp(float x, float upper, float lower) {
@@ -62,42 +63,60 @@ float dot_product(Vector v1, Vector v2) {
   return sum;
 }
 
-bool AABB_vs_AABB(RigidBody* a, RigidBody* b, Collision* c) {
-  Vector n = subtract_vectors(b->pos, a->pos);
+LCDRect LCDRect_from_AABB(AABB aabb, Vector position) {
+  float half_height = aabb.height/2.0f;
+  float half_width = aabb.width/2.0f;
+  return (LCDRect) {
+    .left = position.x - half_width,
+    .right = position.x + half_width,
+    .top = position.y - half_height,
+    .bottom = position.y + half_height
+  };
+}
+
+bool AABB_vs_AABB(RigidBody* a, RigidBody* b, Collision* c, PlaydateAPI* pd) {
   AABB abox = a->collider_shape.aabb;
   AABB bbox = b->collider_shape.aabb;
+  LCDRect rect_a = LCDRect_from_AABB(abox, a->pos);
+  LCDRect rect_b = LCDRect_from_AABB(bbox, b->pos);
 
-  float a_extent_x = abox.width / 2;
-  float b_extent_x = bbox.width / 2;
-  float x_overlap = a_extent_x + b_extent_x - fabsf(n.x);
-
-  float a_extent_y = abox.height / 2;
-  float b_extent_y = abox.height / 2;
-  float y_overlap = a_extent_y + b_extent_y - fabsf(n.y);
-
-  if(y_overlap <=0 && x_overlap <=0) {
+  bool no_collide =  rect_a.right < rect_b.left ||
+                     rect_a.left > rect_b.right ||
+                     rect_a.bottom < rect_b.top ||
+                     rect_a.top > rect_b.bottom;
+  if(no_collide) {
     return false;
   }
 
-  if(x_overlap < y_overlap) {
-    if(n.x < 0) {
-      c->normal = (Vector){ .x=-1, .y=0 };
-    } else {
-      c->normal = (Vector){ .x=0, .y=0 };
-    }
-
-    c->penetration = x_overlap;
-    return true;
+  float y_overlap = 0.0f;
+  Vector y_vector = (Vector){ .x=0, .y=0 };
+  if(a->pos.y < b->pos.y) {
+    y_vector = (Vector){ .x=0, .y=-1 };
+    y_overlap = rect_a.bottom - rect_b.top;
   } else {
-    if(n.y < 0) {
-      c->normal = (Vector){ .x=0, .y=-1 };
-    } else {
-      c->normal = (Vector){ .x=0, .y=1 };
-    }
+    y_vector = (Vector){ .x=0, .y=1 };
+    y_overlap = rect_a.top - rect_b.top;
+  }
+
+  float x_overlap = 0.0f;
+  Vector x_vector = (Vector){ .x=0, .y=0 };
+  if(a->pos.x < b->pos.x) {
+    x_vector = (Vector){ .x=-1, .y=0 };
+    x_overlap = rect_a.right - rect_b.left;
+  } else {
+    x_vector = (Vector){ .x=1, .y=0 };
+    x_overlap = rect_a.left - rect_b.right;
+  }
+
+  if(y_overlap < x_overlap) {
+    c->normal = y_vector;
     c->penetration = y_overlap;
     return true;
+  } else {
+    c->normal = x_vector;
+    c->penetration = x_overlap;
+    return true;
   }
-  return false;
 }
 
 // https://learnopengl.com/In-Practice/2D-Game/Collisions/Collision-detection
@@ -182,4 +201,40 @@ void collide(RigidBody* a, RigidBody* b, Vector normal) {
   Vector impulse = multiply_vector(normal, j);
   a->velocity = subtract_vectors(a->velocity, multiply_vector(impulse, a->inv_mass));
   b->velocity = add_vectors(b->velocity, multiply_vector(impulse, b->inv_mass));
+  return;
+
+  //BEGIN FRICTION CALC
+
+  // Re-calculate relative velocity after normal impulse
+  // is applied (impulse from first article, this code comes
+  // directly thereafter in the same resolve function)
+  relative_velocity = subtract_vectors(b->velocity, a->velocity);
+
+  // Solve for the tangent vector
+  float dot = dot_product(relative_velocity, normal);
+  Vector dot_x_normal = multiply_vector(normal, dot);
+  Vector tangent = subtract_vectors(relative_velocity, dot_x_normal);
+  tangent = normalize_vector(tangent);
+
+  // Solve for magnitude to apply along the friction vector
+  float jt = -dot_product(relative_velocity, tangent);
+  jt /= a->inv_mass + b->inv_mass;
+
+  // BEGIN FRICTION CLAMPING
+
+  // PythagoreanSolve = A^2 + B^2 = C^2, solving for C given A and B
+  // Use to approximate mu given friction coefficients of each body
+  float mu = sqrtf(powf(a->static_friction, 2) + powf(b->static_friction, 2));
+
+  // Clamp magnitude of friction and create impulse vector
+  Vector friction_impulse = (Vector){.x = 0, .y = 0 };
+  if(fabsf(jt) < j * mu) {
+    friction_impulse = multiply_vector(tangent, jt);
+  } else {
+    float dynamicFriction = sqrtf(powf(a->static_friction, 2) + powf(b->static_friction, 2));
+    friction_impulse = multiply_vector(multiply_vector(tangent, -j), dynamicFriction);
+  }
+  // Apply
+  a->velocity = subtract_vectors(a->velocity, multiply_vector(friction_impulse, a->inv_mass));
+  b->velocity = add_vectors(b->velocity, multiply_vector(friction_impulse, b->inv_mass));
 }

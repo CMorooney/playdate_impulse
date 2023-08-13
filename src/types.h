@@ -33,6 +33,8 @@ typedef struct {
   float density;
   float g_mult;
   float force;
+  float static_friction;
+  float dynamic_friction;
   union ColliderShape collider_shape;
   ColliderShapeType collider_shape_type;
   LCDSprite* sprite;
