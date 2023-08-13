@@ -1,13 +1,17 @@
 #include "input.h"
 
-PlaydateAPI* pd;
+PlaydateAPI* i_pd;
+
+PDButtons buttons_pressed;
+PDButtons buttons_held;
+PDButtons buttons_released;
 
 void init_buttons(PlaydateAPI* playdate) {
-  pd = playdate;
+  i_pd = playdate;
 }
 
 void update_buttons(void) {
-  pd->system->getButtonState(&buttons_pressed, &buttons_held, &buttons_released);
+  i_pd->system->getButtonState(&buttons_pressed, &buttons_held, &buttons_released);
 }
 
 // call this after update_buttons() to make sure you have

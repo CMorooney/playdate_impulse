@@ -1,9 +1,9 @@
 #include "collision.h"
 
-PlaydateAPI* pd;
+PlaydateAPI* c_pd;
 
 void init_collision(PlaydateAPI* playdate) {
-  pd = playdate;
+  c_pd = playdate;
 }
 
 bool AABB_vs_AABB(RigidBody* a, RigidBody* b, Collision* c) {
@@ -178,11 +178,11 @@ void collide(RigidBody* a, RigidBody* b, Vector normal) {
 }
 
 SpriteCollisionResponseType circle_collider_handler(LCDSprite* sprite, LCDSprite* other) {
-  ColliderShapeType collider_type = pd->sprite->getTag(other);
-  RigidBody* body = pd->sprite->getUserdata(sprite);
-  RigidBody* other_body = pd->sprite->getUserdata(other);
+  ColliderShapeType collider_type = c_pd->sprite->getTag(other);
+  RigidBody* body = c_pd->sprite->getUserdata(sprite);
+  RigidBody* other_body = c_pd->sprite->getUserdata(other);
 
-  Collision* c = pd->system->realloc(NULL, sizeof(Collision));
+  Collision* c = c_pd->system->realloc(NULL, sizeof(Collision));
 
   bool collided = false;
   switch(collider_type)
@@ -199,16 +199,16 @@ SpriteCollisionResponseType circle_collider_handler(LCDSprite* sprite, LCDSprite
     collide(body, other_body, c->normal);
   }
   // free the collision object
-  pd->system->realloc(c, 0);
+  c_pd->system->realloc(c, 0);
   return kCollisionTypeOverlap;
 }
 
 SpriteCollisionResponseType rect_collider_handler(LCDSprite* sprite, LCDSprite* other) {
-  ColliderShapeType collider_type = pd->sprite->getTag(other);
-  RigidBody* body = pd->sprite->getUserdata(sprite);
-  RigidBody* other_body = pd->sprite->getUserdata(other);
+  ColliderShapeType collider_type = c_pd->sprite->getTag(other);
+  RigidBody* body = c_pd->sprite->getUserdata(sprite);
+  RigidBody* other_body = c_pd->sprite->getUserdata(other);
 
-  Collision* c = pd->system->realloc(NULL, sizeof(Collision));
+  Collision* c = c_pd->system->realloc(NULL, sizeof(Collision));
 
   bool collided = false;
   switch(collider_type)
@@ -225,7 +225,7 @@ SpriteCollisionResponseType rect_collider_handler(LCDSprite* sprite, LCDSprite* 
     collide(other_body, body, c->normal);
   }
   // free the collision object
-  pd->system->realloc(c, 0);
+  c_pd->system->realloc(c, 0);
   return kCollisionTypeOverlap;
 }
 

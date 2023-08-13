@@ -4,10 +4,6 @@
 #include "pd_api.h"
 #include <stdbool.h>
 
-PDButtons buttons_pressed;
-PDButtons buttons_held;
-PDButtons buttons_released;
-
 void init_buttons(PlaydateAPI* playdate);
 void update_buttons(void);
 bool is_button_pressed(PDButtons button);
