@@ -74,7 +74,8 @@ LCDRect LCDRect_from_AABB(AABB aabb, Vector position) {
   };
 }
 
-bool AABB_vs_AABB(RigidBody* a, RigidBody* b, Collision* c, PlaydateAPI* pd) {
+// todo, honestly let PD take care of AABB and just do impulse calculation probably. waster of time
+bool AABB_vs_AABB(RigidBody* a, RigidBody* b, Collision* c) {
   AABB abox = a->collider_shape.aabb;
   AABB bbox = b->collider_shape.aabb;
   LCDRect rect_a = LCDRect_from_AABB(abox, a->pos);
@@ -90,20 +91,26 @@ bool AABB_vs_AABB(RigidBody* a, RigidBody* b, Collision* c, PlaydateAPI* pd) {
 
   float y_overlap = 0.0f;
   Vector y_vector = (Vector){ .x=0, .y=0 };
+  // a is above b
   if(a->pos.y < b->pos.y) {
     y_vector = (Vector){ .x=0, .y=-1 };
     y_overlap = rect_a.bottom - rect_b.top;
-  } else {
+  }
+  // a is below b
+  else {
     y_vector = (Vector){ .x=0, .y=1 };
     y_overlap = rect_a.top - rect_b.top;
   }
 
   float x_overlap = 0.0f;
   Vector x_vector = (Vector){ .x=0, .y=0 };
+  // a is to right of b
   if(a->pos.x < b->pos.x) {
     x_vector = (Vector){ .x=-1, .y=0 };
     x_overlap = rect_a.right - rect_b.left;
-  } else {
+  }
+  // a is to left of b
+  else {
     x_vector = (Vector){ .x=1, .y=0 };
     x_overlap = rect_a.left - rect_b.right;
   }
@@ -122,23 +129,23 @@ bool AABB_vs_AABB(RigidBody* a, RigidBody* b, Collision* c, PlaydateAPI* pd) {
 // https://learnopengl.com/In-Practice/2D-Game/Collisions/Collision-detection
 bool AABB_vs_circle(RigidBody* aabb, RigidBody* circle, Collision* c) {
   // get vector from center of circle to center of aabb
-  Vector distance_between_bodies = subtract_vectors(circle->pos, aabb->pos);
+  Vector vector_between_bodies = subtract_vectors(circle->pos, aabb->pos);
 
   // get the half-size dimensions of the aabb
-  float aabb_half_x_extent = aabb->collider_shape.aabb.width / 2;
-  float aabb_half_y_extent = aabb->collider_shape.aabb.height / 2;
+  float aabb_half_x_extent = aabb->collider_shape.aabb.width / 2.0f;
+  float aabb_half_y_extent = aabb->collider_shape.aabb.height / 2.0f;
 
   // clamp vector between body centers to the bounds of the aabb
-  Vector clamped = distance_between_bodies;
+  Vector clamped = vector_between_bodies;
   clamped.x = clamp(clamped.x, aabb_half_x_extent, -aabb_half_x_extent);
   clamped.y = clamp(clamped.y, aabb_half_y_extent, -aabb_half_y_extent);
 
   Vector closest_point_on_aabb = add_vectors(clamped, aabb->pos);
-  Vector circle_pos_to_aabb_point = subtract_vectors(circle->pos, closest_point_on_aabb);
+  Vector circle_pos_to_aabb_point = subtract_vectors(closest_point_on_aabb, circle->pos);
   float circle_pos_to_aabb_point_distance_squared = get_magnitude_squared(circle_pos_to_aabb_point);
   float circle_radius = circle->collider_shape.circle.radius;
 
-  bool collided = circle_pos_to_aabb_point_distance_squared > (circle_radius*circle_radius);
+  bool collided = circle_pos_to_aabb_point_distance_squared < (circle_radius*circle_radius);
   if(!collided)
   {
     return false;
@@ -146,7 +153,7 @@ bool AABB_vs_circle(RigidBody* aabb, RigidBody* circle, Collision* c) {
 
   float m = sqrtf(circle_pos_to_aabb_point_distance_squared);
   c->penetration = circle_radius - m;
-  c->normal = negate_vector(divide_vector(circle_pos_to_aabb_point, m));
+  c->normal = divide_vector(circle_pos_to_aabb_point, m);
   return true;
 }
 

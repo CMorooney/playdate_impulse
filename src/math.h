@@ -25,7 +25,7 @@ Vector mirror_vector(Vector v, Vector normalizedVector);
 
 float distance(Vector v1, Vector v2);
 
-bool AABB_vs_AABB(RigidBody* a, RigidBody* b, Collision* c, PlaydateAPI* pd);
+bool AABB_vs_AABB(RigidBody* a, RigidBody* b, Collision* c);
 bool AABB_vs_circle(RigidBody* aabb, RigidBody* circle, Collision* c);
 bool circle_vs_circle_unoptimized(Circle a, Circle b);
 bool circle_vs_circle_optimized(RigidBody* a, RigidBody* b, Collision* c);
