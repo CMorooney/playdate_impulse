@@ -47,4 +47,6 @@ typedef struct {
   Vector normal;
 } Collision;
 
+LCDRect LCDRect_from_AABB(AABB aabb, Vector position);
+
 #endif

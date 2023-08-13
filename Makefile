@@ -23,7 +23,9 @@ VPATH += src
 # List C source files here
 SRC = src/main.c \
       src/input.c \
-      src/math.c
+      src/math.c \
+      src/collision.c \
+      src/types.c
 
 # List all user directories here
 UINCDIR = 
