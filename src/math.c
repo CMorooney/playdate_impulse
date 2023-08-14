@@ -6,6 +6,10 @@ float clamp(float x, float upper, float lower) {
   return fminf(upper, fmaxf(x, lower));
 }
 
+bool vector_equals(Vector a, Vector b) {
+  return a.x == b.x && a.y == b.y;
+}
+
 Vector add_vectors(Vector v1, Vector v2) {
   return (Vector) { .x = v1.x + v2.x, .y = v1.y + v2.y};
 }

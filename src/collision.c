@@ -139,7 +139,6 @@ void collide(RigidBody* a, RigidBody* b, Vector normal) {
   Vector impulse = multiply_vector(normal, j);
   a->velocity = subtract_vectors(a->velocity, multiply_vector(impulse, a->inv_mass));
   b->velocity = add_vectors(b->velocity, multiply_vector(impulse, b->inv_mass));
-  return;
 
   //BEGIN FRICTION CALC
 
@@ -151,14 +150,15 @@ void collide(RigidBody* a, RigidBody* b, Vector normal) {
   // Solve for the tangent vector
   float dot = dot_product(relative_velocity, normal);
   Vector dot_x_normal = multiply_vector(normal, dot);
+  if(vector_equals(relative_velocity, dot_x_normal)) {
+    return;
+  }
   Vector tangent = subtract_vectors(relative_velocity, dot_x_normal);
   tangent = normalize_vector(tangent);
 
   // Solve for magnitude to apply along the friction vector
   float jt = -dot_product(relative_velocity, tangent);
   jt /= a->inv_mass + b->inv_mass;
-
-  // BEGIN FRICTION CLAMPING
 
   // PythagoreanSolve = A^2 + B^2 = C^2, solving for C given A and B
   // Use to approximate mu given friction coefficients of each body
@@ -169,9 +169,10 @@ void collide(RigidBody* a, RigidBody* b, Vector normal) {
   if(fabsf(jt) < j * mu) {
     friction_impulse = multiply_vector(tangent, jt);
   } else {
-    float dynamicFriction = sqrtf(powf(a->static_friction, 2) + powf(b->static_friction, 2));
-    friction_impulse = multiply_vector(multiply_vector(tangent, -j), dynamicFriction);
+    float dynamicFriction = sqrtf(powf(a->dynamic_friction, 2) + powf(b->dynamic_friction, 2));
+    friction_impulse = multiply_vector(tangent, -j * dynamicFriction);
   }
+
   // Apply
   a->velocity = subtract_vectors(a->velocity, multiply_vector(friction_impulse, a->inv_mass));
   b->velocity = add_vectors(b->velocity, multiply_vector(friction_impulse, b->inv_mass));

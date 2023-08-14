@@ -6,6 +6,7 @@
 
 float clamp(float x, float upper, float lower);
 
+bool vector_equals(Vector a, Vector b);
 Vector subtract_vectors(Vector v1, Vector v2);
 Vector divide_vector(Vector v, float by);
 Vector multiply_vector(Vector v, float by);

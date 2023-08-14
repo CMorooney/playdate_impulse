@@ -76,7 +76,9 @@ void init_sprites(void) {
     .g_mult = 1,
     .collider_shape = (union ColliderShape){ .circle = (Circle){ .radius = 15.0f } },
     .collider_shape_type = circle,
-    .sprite = ball30_sprite
+    .sprite = ball30_sprite,
+    .static_friction = 0.1f,
+    .dynamic_friction = 0.12f
   };
   bodies[0] = *ball30_body;
   pd->sprite->setUserdata(ball30_sprite, &bodies[0]);
@@ -98,7 +100,9 @@ void init_sprites(void) {
     .g_mult = 1,
     .collider_shape = (union ColliderShape){ .circle = (Circle){ .radius = 25.0f } },
     .collider_shape_type = circle,
-    .sprite = ball50_sprite
+    .sprite = ball50_sprite,
+    .static_friction = 0.0f,
+    .dynamic_friction = 0.05f
   };
   bodies[1] = *ball50_body;
   pd->sprite->setUserdata(ball50_sprite, &bodies[1]);
@@ -120,7 +124,9 @@ void init_sprites(void) {
     .g_mult = 0,
     .collider_shape = (union ColliderShape) { .aabb = (AABB){ .width=LCD_COLUMNS, .height = 25 } },
     .collider_shape_type = aabb,
-    .sprite = floor_sprite
+    .sprite = floor_sprite,
+    .static_friction = 0.0f,
+    .dynamic_friction = 0.0f
   };
   bodies[2] = *floor_body;
   pd->sprite->setUserdata(floor_sprite, &bodies[2]);
@@ -142,7 +148,9 @@ void init_sprites(void) {
     .g_mult = 1,
     .collider_shape = (union ColliderShape) { .aabb = (AABB){ .width=50, .height=100 } },
     .collider_shape_type = aabb,
-    .sprite = rect50x100_sprite
+    .sprite = rect50x100_sprite,
+    .static_friction = 0.0f,
+    .dynamic_friction = 0.12f
   };
   bodies[3] = *rect100_body;
   pd->sprite->setUserdata(rect50x100_sprite, &bodies[3]);
@@ -164,7 +172,9 @@ void init_sprites(void) {
     .g_mult = 1,
     .collider_shape = (union ColliderShape) { .aabb = (AABB){ .width=50, .height=25 } },
     .collider_shape_type = aabb,
-    .sprite = rect50x25_sprite
+    .sprite = rect50x25_sprite,
+    .static_friction = 0.0f,
+    .dynamic_friction = 0.12f
   };
   bodies[4] = *rect50_body;
   pd->sprite->setUserdata(rect50x25_sprite, &bodies[4]);
