@@ -15,14 +15,25 @@ typedef struct {
   float radius;
 } Circle;
 
+typedef struct {
+  // relative to center of rigidbody!!
+  Vector p1;
+  Vector p2;
+  Vector p3;
+  float bb_h_w;//bounding box half-width
+  float bb_h_h;//bounding box-half-height
+} Triangle;
+
 union ColliderShape {
   Circle circle;
   AABB aabb;
+  Triangle triangle;
 };
 
 typedef enum {
   circle,
-  aabb
+  aabb,
+  triangle,
 } ColliderShapeType;
 
 typedef struct {
@@ -35,6 +46,10 @@ typedef struct {
   float force;
   float static_friction;
   float dynamic_friction;
+  float orientation;
+  float angular_velocity;
+  float torque;
+  float moment_of_inertia;
   union ColliderShape collider_shape;
   ColliderShapeType collider_shape_type;
   LCDSprite* sprite;

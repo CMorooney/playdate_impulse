@@ -17,13 +17,10 @@ float get_magnitude(Vector v);
 
 Vector add_vectors(Vector v1, Vector v2);
 float dot_product(Vector v1, Vector v2);
+float cross_product_vectors(Vector v1, Vector v2);
+Vector cross_product_vector_scalar(Vector v, float s);
+Vector cross_product_scalar_vector(float s, Vector v);
 
 float distance(Vector v1, Vector v2);
-
-bool AABB_vs_AABB(RigidBody* a, RigidBody* b, Collision* c);
-bool AABB_vs_circle(RigidBody* aabb, RigidBody* circle, Collision* c);
-bool circle_vs_circle(RigidBody* a, RigidBody* b, Collision* c);
-
-void collide(RigidBody* a, RigidBody* b, Vector normal);
 
 #endif

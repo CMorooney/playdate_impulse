@@ -6,6 +6,18 @@ float clamp(float x, float upper, float lower) {
   return fminf(upper, fmaxf(x, lower));
 }
 
+float cross_prodcut_vectors(Vector v1, Vector v2) {
+  return v1.x * v2.y - v1.y * v2.x;
+}
+
+Vector cross_product_vector_scalar(Vector v, float s) {
+  return (Vector) { .x = s * v.y, .y = -s * v.x };
+}
+
+Vector cross_product_scalar_vector(float s, Vector v) {
+  return (Vector) { .x = -s * v.y, .y = s * v.x };
+}
+
 bool vector_equals(Vector a, Vector b) {
   return a.x == b.x && a.y == b.y;
 }

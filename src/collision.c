@@ -178,6 +178,78 @@ void collide(RigidBody* a, RigidBody* b, Vector normal) {
   b->velocity = add_vectors(b->velocity, multiply_vector(friction_impulse, b->inv_mass));
 }
 
+bool AABB_vs_triangle(RigidBody* aabb, RigidBody* triangle, Collision* out_c) {
+  Vector half_size = (Vector){ .x=aabb->collider_shape.aabb.width/2, .y=aabb->collider_shape.aabb.height/2 };
+
+  float min_x = aabb->pos.x - half_size.x;
+  float max_x = aabb->pos.x + half_size.x;
+  float min_y = aabb->pos.y - half_size.y;
+  float max_y = aabb->pos.y + half_size.y;
+
+  Triangle t_shape = triangle->collider_shape.triangle;
+
+  // check if triangle points are within rectangle
+  // this is not sufficient
+  Vector points[3] = { t_shape.p1, t_shape.p2, t_shape.p3 };
+  for(int i = 0; i < 3; i++) {
+    Vector p = points[i];
+    Vector rel = add_vectors(p, triangle->pos);
+    if(rel.x > min_x &&
+       rel.x < max_x &&
+       rel.y > min_y &&
+       rel.y < max_y) {
+      // todo: actually calculate normal
+      out_c->normal = (Vector) { .x=0, .y=-1 };
+      return true;
+    }
+  }
+
+  out_c->normal = (Vector) { .x=0, .y=0 };
+
+  return false;
+}
+
+//mostly using the edge detection from
+//http://www.phatcode.net/articles.php?id=459
+bool circle_vs_triangle(RigidBody* circle, RigidBody* triangle, Collision* out_c) {
+  Circle c_shape = circle->collider_shape.circle;
+  Triangle t_shape = triangle->collider_shape.triangle;
+
+  // get absolute position of triangle vectors
+  Vector t_top_left = subtract_vectors(triangle->pos, (Vector){ .x=t_shape.bb_h_w, .y=t_shape.bb_h_h });
+  Vector vertices[3] = { add_vectors(t_top_left, t_shape.p1),
+                         add_vectors(t_top_left, t_shape.p2),
+                         add_vectors(t_top_left, t_shape.p3) };
+
+  // get absolute edges of triangle
+  Vector edges[3] = { subtract_vectors(vertices[1], vertices[0]),
+                      subtract_vectors(vertices[2], vertices[1]),
+                      subtract_vectors(vertices[2], vertices[0]) };
+
+  // for each edge, measure the right triangle that is created
+  // by connecting the Circle center to a TriangleVertex and a
+  // perpendicular line from the Circle center to the edge
+  // (closes point on line will also always be perpendicular to that line)
+  // the length of this last line can be checked against the circle radius for collision logic.
+  // the edges of this imaginary triangle will be `k` (or k_squared), `p`,
+  // and `distance_to_edge` (or distance_to_edge_squared)
+  for(int i = 0; i < 3; i++) {
+    Vector edge = edges[i];
+    Vector vertex = vertices[i];
+    Vector circle_to_vertex = subtract_vectors(circle->pos, vertex);
+
+    float k_squared = powf(dot_product(circle_to_vertex, edge), 2) / get_magnitude_squared(edge);
+    float p = get_magnitude(circle_to_vertex);
+    float distance_to_edge_squared = powf(p, 2) - k_squared;
+
+    if(distance_to_edge_squared <= powf(c_shape.radius, 2)){
+      out_c->normal = (Vector){.x=1, .y=1};//todo actually calculate normal yikes
+      return true;
+    }
+  }
+  return false;
+}
+
 SpriteCollisionResponseType circle_collider_handler(LCDSprite* sprite, LCDSprite* other) {
   ColliderShapeType collider_type = c_pd->sprite->getTag(other);
   RigidBody* body = c_pd->sprite->getUserdata(sprite);
@@ -194,6 +266,8 @@ SpriteCollisionResponseType circle_collider_handler(LCDSprite* sprite, LCDSprite
     case aabb:
       collided = AABB_vs_circle(other_body, body, c);
       break;
+    case triangle:
+      collided  = circle_vs_triangle(body, other_body, c);
   }
 
   if(collided && c != NULL) {
@@ -219,6 +293,37 @@ SpriteCollisionResponseType rect_collider_handler(LCDSprite* sprite, LCDSprite* 
       break;
     case aabb:
       collided = AABB_vs_AABB(body, other_body, c);
+      break;
+    case triangle:
+      collided = AABB_vs_triangle(body, other_body, c);
+      break;
+  }
+
+  if(collided && c != NULL) {
+    collide(other_body, body, c->normal);
+  }
+  // free the collision object
+  c_pd->system->realloc(c, 0);
+  return kCollisionTypeOverlap;
+}
+
+SpriteCollisionResponseType triangle_collider_handler(LCDSprite* sprite, LCDSprite* other) {
+  ColliderShapeType collider_type = c_pd->sprite->getTag(other);
+  RigidBody* body = c_pd->sprite->getUserdata(sprite);
+  RigidBody* other_body = c_pd->sprite->getUserdata(other);
+
+  Collision* c = c_pd->system->realloc(NULL, sizeof(Collision));
+
+  bool collided = false;
+  switch(collider_type)
+  {
+    case circle:
+      collided = circle_vs_triangle(other_body, body, c);
+      break;
+    case aabb:
+      collided = AABB_vs_triangle(other_body, body, c);
+      break;
+    case triangle:
       break;
   }
 
