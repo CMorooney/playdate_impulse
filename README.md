@@ -10,7 +10,8 @@ running the project will get you this:
 ------------
 
 todo:
-- [ ] actual/bettery AABB-triangle collision check
+- [ ] circle-triangle vertex collision check
+- [ ] actual/better AABB-triangle collision check
 - [ ] Circle rotation
 - [ ] OOB/box rotation
 - [ ] triangle rotation
