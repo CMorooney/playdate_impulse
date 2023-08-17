@@ -243,7 +243,8 @@ bool circle_vs_triangle(RigidBody* circle, RigidBody* triangle, Collision* out_c
     float distance_to_edge_squared = powf(p, 2) - k_squared;
 
     if(distance_to_edge_squared <= powf(c_shape.radius, 2)){
-      out_c->normal = (Vector){.x=1, .y=1};//todo actually calculate normal yikes
+      Vector cross = normalize_vector((Vector){ .x=edge.y * edge.y, .y=-edge.x * edge.y });
+      out_c->normal = cross;
       return true;
     }
   }
