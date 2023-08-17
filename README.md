@@ -4,6 +4,11 @@ this project is/was meant to be a clean look at adding extended collision behavi
 
 ------------
 
+running the project will get you this:
+![](https://github.com/CMorooney/playdate_impulse/blob/master/screenshots/sample.gif)
+
+------------
+
 todo:
 - [ ] actual/bettery AABB-triangle collision check
 - [ ] Circle rotation
