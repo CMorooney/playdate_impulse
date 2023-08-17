@@ -189,7 +189,7 @@ void init_sprites(void) {
   RigidBody* triangle_body = &(RigidBody) {
     .pos = triangle_pos,
     .velocity = (Vector) { .x=0, .y=0 },
-    .inv_mass = 1,
+    .inv_mass = 0,
     .restitution = .4f,
     .g_mult = 1,
     .collider_shape = (union ColliderShape){

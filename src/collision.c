@@ -118,6 +118,13 @@ bool circle_vs_circle(RigidBody* a, RigidBody* b, Collision* c) {
 }
 
 void collide(RigidBody* a, RigidBody* b, Vector normal) {
+  float inv_mass_sum = a->inv_mass + b-> inv_mass;
+  if(inv_mass_sum == 0) {
+    a->velocity = (Vector){ .x=0, .y=0 };
+    b->velocity = (Vector){ .x=0, .y=0 };
+    return;
+  }
+
   Vector relative_velocity = subtract_vectors(b->velocity, a->velocity);
 
   // put it in terms of the collision normal direction
@@ -134,7 +141,7 @@ void collide(RigidBody* a, RigidBody* b, Vector normal) {
 
   // calculate impulse scalar
   float j = -(1 + e) * velocity_along_normal;
-  j /= a->inv_mass + b->inv_mass;
+  j /= inv_mass_sum;
 
   // apply impulse
   Vector impulse = multiply_vector(normal, j);
@@ -159,7 +166,7 @@ void collide(RigidBody* a, RigidBody* b, Vector normal) {
 
   // Solve for magnitude to apply along the friction vector
   float jt = -dot_product(relative_velocity, tangent);
-  jt /= a->inv_mass + b->inv_mass;
+  jt /= inv_mass_sum;
 
   // PythagoreanSolve = A^2 + B^2 = C^2, solving for C given A and B
   // Use to approximate mu given friction coefficients of each body
