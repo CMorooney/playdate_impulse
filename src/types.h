@@ -41,9 +41,7 @@ typedef struct {
   Vector velocity;
   float inv_mass;
   float restitution;
-  float density;
   float g_mult;
-  float force;
   float static_friction;
   float dynamic_friction;
   float orientation;

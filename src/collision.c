@@ -131,6 +131,7 @@ void collide(RigidBody* a, RigidBody* b, Vector normal) {
   // calculate restitution
   float e = fminf(a->restitution, b->restitution);
 
+
   // calculate impulse scalar
   float j = -(1 + e) * velocity_along_normal;
   j /= a->inv_mass + b->inv_mass;
