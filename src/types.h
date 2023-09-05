@@ -20,8 +20,6 @@ typedef struct {
   Vector p1;
   Vector p2;
   Vector p3;
-  float bb_h_w;//bounding box half-width
-  float bb_h_h;//bounding box-half-height
 } Triangle;
 
 union ColliderShape {

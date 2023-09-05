@@ -224,10 +224,9 @@ bool circle_vs_triangle(RigidBody* circle, RigidBody* triangle, Collision* out_c
   Triangle t_shape = triangle->collider_shape.triangle;
 
   // get absolute position of triangle vectors
-  Vector t_top_left = subtract_vectors(triangle->pos, (Vector){ .x=t_shape.bb_h_w, .y=t_shape.bb_h_h });
-  Vector vertices[3] = { add_vectors(t_top_left, t_shape.p1),
-                         add_vectors(t_top_left, t_shape.p2),
-                         add_vectors(t_top_left, t_shape.p3) };
+  Vector vertices[3] = { add_vectors(triangle->pos, t_shape.p1),
+                         add_vectors(triangle->pos, t_shape.p2),
+                         add_vectors(triangle->pos, t_shape.p3) };
 
   // get absolute edges of triangle
   Vector edges[3] = { subtract_vectors(vertices[1], vertices[0]),
