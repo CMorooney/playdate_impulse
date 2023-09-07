@@ -19,14 +19,16 @@ LCDBitmap* ball30_bmp;
 LCDBitmap* ball50_bmp;
 LCDBitmap* rect50x100_bmp;
 LCDBitmap* rect50x25_bmp;
-LCDBitmap* triangle_bmp;
+LCDBitmap* triangle_r_bmp;
+LCDBitmap* triangle_l_bmp;
 LCDBitmap* floor_bmp;
 
 LCDSprite* ball30_sprite;
 LCDSprite* ball50_sprite;
 LCDSprite* rect50x100_sprite;
 LCDSprite* rect50x25_sprite;
-LCDSprite* triangle_sprite;
+LCDSprite* triangle_r_sprite;
+LCDSprite* triangle_l_sprite;
 LCDSprite* floor_sprite;
 
 RigidBody* bodies;
@@ -56,14 +58,13 @@ void init_bitmaps(void) {
   ball50_bmp = pd->graphics->loadBitmap("image/ball50", outerr);
   rect50x100_bmp = pd->graphics->loadBitmap("image/rect50x100", outerr);
   rect50x25_bmp = pd->graphics->loadBitmap("image/rect50x25", outerr);
-  triangle_bmp = pd->graphics->loadBitmap("image/triangle_200x100", outerr);
+  triangle_r_bmp = pd->graphics->loadBitmap("image/triangle_200x100", outerr);
+  triangle_l_bmp = pd->graphics->loadBitmap("image/triangle_200x100-flip", outerr);
   floor_bmp = pd->graphics->loadBitmap("image/floor", outerr);
 }
 
-void init_sprites(void) {
-  bodies = pd->system->realloc(NULL, sizeof(RigidBody)*6);
-
-  Vector ball30_pos = (Vector){ .x = SCREEN_MID_X+80, .y = 30 };
+void init_balls(void) {
+  Vector ball30_pos = (Vector){ .x = SCREEN_MID_X-80, .y = 30 };
   ball30_sprite = pd->sprite->newSprite();
   pd->sprite->setImage(ball30_sprite, ball30_bmp, kBitmapUnflipped);
   pd->sprite->setCollideRect(ball30_sprite, (PDRect){ .x=-2, .y=-2, .width=34, .height=34 });
@@ -108,30 +109,9 @@ void init_sprites(void) {
   };
   bodies[1] = *ball50_body;
   pd->sprite->setUserdata(ball50_sprite, &bodies[1]);
+}
 
-  Vector floor_pos = (Vector) { .x=SCREEN_MID_X, .y=LCD_ROWS-12 };
-  floor_sprite = pd->sprite->newSprite();
-  pd->sprite->setImage(floor_sprite, floor_bmp, kBitmapUnflipped);
-  pd->sprite->setCollideRect(floor_sprite, (PDRect){ .x=0, .y=0, .width=LCD_COLUMNS, .height=25 });
-  pd->sprite->setCollisionResponseFunction(floor_sprite, rect_collider_handler);
-  pd->sprite->moveTo(floor_sprite, floor_pos.x, floor_pos.y);
-  pd->sprite->setTag(floor_sprite, (uint8_t)aabb);
-  pd->sprite->addSprite(floor_sprite);
-  RigidBody* floor_body = &(RigidBody) {
-    .pos = floor_pos,
-    .velocity = (Vector){ .x=0, .y=0 },
-    .inv_mass = 0,
-    .restitution = 0.4f,
-    .g_mult = 0,
-    .collider_shape = (union ColliderShape) { .aabb = (AABB){ .width=LCD_COLUMNS, .height = 25 } },
-    .collider_shape_type = aabb,
-    .sprite = floor_sprite,
-    .static_friction = 0.0f,
-    .dynamic_friction = 0.0f
-  };
-  bodies[2] = *floor_body;
-  pd->sprite->setUserdata(floor_sprite, &bodies[2]);
-
+void init_rectangles(void) {
   Vector rect100_pos = (Vector){ 150, 70 };
   rect50x100_sprite = pd->sprite->newSprite();
   pd->sprite->setImage(rect50x100_sprite, rect50x100_bmp, kBitmapUnflipped);
@@ -177,17 +157,19 @@ void init_sprites(void) {
   };
   bodies[4] = *rect50_body;
   pd->sprite->setUserdata(rect50x25_sprite, &bodies[4]);
+}
 
-  Vector triangle_pos = (Vector) { .x = 280, .y = LCD_ROWS-115 };
-  triangle_sprite = pd->sprite->newSprite();
-  pd->sprite->setImage(triangle_sprite, triangle_bmp, kBitmapUnflipped);
-  pd->sprite->setCollideRect(triangle_sprite, (PDRect) { .x=0, .y=0, .width=200, .height=100 });
-  pd->sprite->setCollisionResponseFunction(triangle_sprite, triangle_collider_handler);
-  pd->sprite->setTag(triangle_sprite, (uint8_t)triangle);
-  pd->sprite->moveTo(triangle_sprite, triangle_pos.x, triangle_pos.y);
-  pd->sprite->addSprite(triangle_sprite);
-  RigidBody* triangle_body = &(RigidBody) {
-    .pos = triangle_pos,
+void init_triangles(void) {
+  Vector triangle_r_pos = (Vector) { .x = 300, .y = LCD_ROWS-115 };
+  triangle_r_sprite = pd->sprite->newSprite();
+  pd->sprite->setImage(triangle_r_sprite, triangle_r_bmp, kBitmapUnflipped);
+  pd->sprite->setCollideRect(triangle_r_sprite, (PDRect) { .x=0, .y=0, .width=200, .height=100 });
+  pd->sprite->setCollisionResponseFunction(triangle_r_sprite, triangle_collider_handler);
+  pd->sprite->setTag(triangle_r_sprite, (uint8_t)triangle);
+  pd->sprite->moveTo(triangle_r_sprite, triangle_r_pos.x, triangle_r_pos.y);
+  pd->sprite->addSprite(triangle_r_sprite);
+  RigidBody* triangle_r_body = &(RigidBody) {
+    .pos = triangle_r_pos,
     .velocity = (Vector) { .x=0, .y=0 },
     .inv_mass = 0,
     .restitution = .4f,
@@ -200,12 +182,74 @@ void init_sprites(void) {
       }
     },
     .collider_shape_type = triangle,
-    .sprite = triangle_sprite,
+    .sprite = triangle_r_sprite,
     .static_friction = 0.0f,
     .dynamic_friction = 0.12f
   };
-  bodies[5] = *triangle_body;
-  pd->sprite->setUserdata(triangle_sprite, &bodies[5]);
+  bodies[2] = *triangle_r_body;
+  pd->sprite->setUserdata(triangle_r_sprite, &bodies[2]);
+
+  Vector triangle_l_pos = (Vector) { .x = 100, .y = LCD_ROWS-115 };
+  triangle_l_sprite = pd->sprite->newSprite();
+  pd->sprite->setImage(triangle_l_sprite, triangle_l_bmp, kBitmapUnflipped);
+  pd->sprite->setCollideRect(triangle_l_sprite, (PDRect) { .x=0, .y=0, .width=200, .height=100 });
+  pd->sprite->setCollisionResponseFunction(triangle_l_sprite, triangle_collider_handler);
+  pd->sprite->setTag(triangle_l_sprite, (uint8_t)triangle);
+  pd->sprite->moveTo(triangle_l_sprite, triangle_l_pos.x, triangle_l_pos.y);
+  pd->sprite->addSprite(triangle_l_sprite);
+  RigidBody* triangle_l_body = &(RigidBody) {
+    .pos = triangle_l_pos,
+    .velocity = (Vector) { .x=0, .y=0 },
+    .inv_mass = 0,
+    .restitution = .4f,
+    .g_mult = 1,
+    .collider_shape = (union ColliderShape){
+      .triangle = (Triangle) {// points relative to center/sprite pos
+        .p1=(Vector){.x = 100, .y = 50 },
+        .p2=(Vector){.x = -100, .y = 50 },
+        .p3=(Vector){.x = -100, .y = -50 }
+      }
+    },
+    .collider_shape_type = triangle,
+    .sprite = triangle_l_sprite,
+    .static_friction = 0.0f,
+    .dynamic_friction = 0.12f
+  };
+  bodies[3] = *triangle_l_body;
+  pd->sprite->setUserdata(triangle_l_sprite, &bodies[3]);
+}
+
+void init_sprites(void) {
+  bodies = pd->system->realloc(NULL, sizeof(RigidBody)*5);
+
+  init_balls();
+
+  //init_rectangles();
+
+  init_triangles();
+
+  Vector floor_pos = (Vector) { .x=SCREEN_MID_X, .y=LCD_ROWS-12 };
+  floor_sprite = pd->sprite->newSprite();
+  pd->sprite->setImage(floor_sprite, floor_bmp, kBitmapUnflipped);
+  pd->sprite->setCollideRect(floor_sprite, (PDRect){ .x=0, .y=0, .width=LCD_COLUMNS, .height=25 });
+  pd->sprite->setCollisionResponseFunction(floor_sprite, rect_collider_handler);
+  pd->sprite->moveTo(floor_sprite, floor_pos.x, floor_pos.y);
+  pd->sprite->setTag(floor_sprite, (uint8_t)aabb);
+  pd->sprite->addSprite(floor_sprite);
+  RigidBody* floor_body = &(RigidBody) {
+    .pos = floor_pos,
+    .velocity = (Vector){ .x=0, .y=0 },
+    .inv_mass = 0,
+    .restitution = 0.4f,
+    .g_mult = 0,
+    .collider_shape = (union ColliderShape) { .aabb = (AABB){ .width=LCD_COLUMNS, .height = 25 } },
+    .collider_shape_type = aabb,
+    .sprite = floor_sprite,
+    .static_friction = 0.0f,
+    .dynamic_friction = 0.0f
+  };
+  bodies[4] = *floor_body;
+  pd->sprite->setUserdata(floor_sprite, &bodies[4]);
 }
 
 void update_delta_time(void) {
@@ -216,7 +260,7 @@ void update_delta_time(void) {
 
 void tick(void) {
   Vector g = (Vector){ .x=0, .y=25 };
-  for(int i = 0; i < 6; i++) {
+  for(int i = 0; i < 5; i++) {
     RigidBody* body = &bodies[i];
 
     // calculate new position by adding velocity to current pos

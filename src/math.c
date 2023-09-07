@@ -57,3 +57,23 @@ float dot_product(Vector v1, Vector v2) {
   return sum;
 }
 
+float distance_squared(Vector v1, Vector v2) {
+  return powf((v2.x - v1.x), 2) + powf(v2.y - v1.y, 2);
+}
+
+float distance(Vector v1, Vector v2) {
+  return sqrtf(distance_squared(v1, v2));
+}
+
+//https://stackoverflow.com/a/68116732/3102451
+bool is_point_on_line(Vector l1, Vector l2, Vector p) {
+  float dx = (p.x - l1.x) / (l2.x - l1.x);
+  float dy = (p.y - l1.y) / (l2.y - l1.y);
+  bool onLine = dx == dy;
+
+  // Check on or within x and y bounds
+  bool betweenX = 0 <= dx && dx <= 1;
+  bool betweenY = 0 <= dy && dy <= 1;
+
+  return onLine && betweenX && betweenY;
+}

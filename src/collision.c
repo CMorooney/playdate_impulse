@@ -226,33 +226,41 @@ bool circle_vs_triangle(RigidBody* circle, RigidBody* triangle, Collision* out_c
   // get absolute position of triangle vectors
   Vector vertices[3] = { add_vectors(triangle->pos, t_shape.p1),
                          add_vectors(triangle->pos, t_shape.p2),
-                         add_vectors(triangle->pos, t_shape.p3) };
+                         add_vectors(triangle->pos, t_shape.p3)
+  };
 
   // get absolute edges of triangle
-  Vector edges[3] = { subtract_vectors(vertices[1], vertices[0]),
-                      subtract_vectors(vertices[2], vertices[1]),
-                      subtract_vectors(vertices[2], vertices[0]) };
+  Vector edges[3][2] = { { vertices[0], vertices[1] },
+                         { vertices[1], vertices[2] },
+                         { vertices[2], vertices[0] }
+  };
 
-  // for each edge, measure the right triangle that is created
-  // by connecting the Circle center to a TriangleVertex and a
-  // perpendicular line from the Circle center to the edge
-  // (closes point on line will also always be perpendicular to that line)
-  // the length of this last line can be checked against the circle radius for collision logic.
-  // the edges of this imaginary triangle will be `k` (or k_squared), `p`,
-  // and `distance_to_edge` (or distance_to_edge_squared)
   for(int i = 0; i < 3; i++) {
-    Vector edge = edges[i];
-    Vector vertex = vertices[i];
-    Vector circle_to_vertex = subtract_vectors(circle->pos, vertex);
+    Vector p1 = edges[i][0];
+    Vector p2 = edges[i][1];
+    Vector dist = subtract_vectors(p1, p2);
 
-    float k_squared = powf(dot_product(circle_to_vertex, edge), 2) / get_magnitude_squared(edge);
-    float p = get_magnitude(circle_to_vertex);
-    float distance_to_edge_squared = powf(p, 2) - k_squared;
+    float len_squared = get_magnitude_squared(dist);
 
-    if(distance_to_edge_squared <= powf(c_shape.radius, 2)){
-      Vector cross = normalize_vector((Vector){ .x=edge.y * edge.y, .y=-edge.x * edge.y });
-      out_c->normal = cross;
-      return true;
+    float dot = (((circle->pos.x - p1.x) * (p2.x - p1.x)) + ((circle->pos.y - p1.y) * (p2.y - p1.y)))/len_squared;
+
+    Vector closest_point = (Vector) {
+      .x = p1.x + (dot * (p2.x - p1.x)),
+      .y = p1.y + (dot * (p2.y - p1.y))
+    };
+
+    // check if closest_point is on the actual line <p1, p2>
+    if (is_point_on_line(p1, p2, closest_point)){
+      // ok, it's on the line
+      Vector circle_to_closest_point_on_line = subtract_vectors(closest_point, circle->pos);
+      float final_dist_squared = powf(circle_to_closest_point_on_line.x, 2) + powf(circle_to_closest_point_on_line.y, 2);
+      if(final_dist_squared <= powf(c_shape.radius, 2)) {
+        Vector cross = p1.x < p2.x ?
+                        normalize_vector((Vector){ .x = dist.y, .y = -dist.x })
+                        : normalize_vector((Vector){ .x = -dist.y, .y = dist.x });
+        out_c->normal = cross;
+        return true;
+      }
     }
   }
   return false;
